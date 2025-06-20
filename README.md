@@ -1,67 +1,15 @@
 # code-with-quarkus
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+this reproducer shows that we can't rely on duplicated context when consuming jms messages and sending them to kafka
+the scenario goes like this:
+- a timer sends a jms message to a queue with a correlation id
+- a jms consumer consumes the message, fetches the correlation id from the jms message, attempts to set in the duplicated context (which will fail) and sends the message to kafka through an emitter
+- a kafka outgoing message interceptor attempts to read the correlation id from the duplicated context (which will fail) to set it as a header in the kafka message
+- a kafka consumer consumes the message and attempts to read the correlation id from the header (which will be missing) 
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+we can see 3 error logs:
+- `unable to set correlation id in duplicated context` when the jms consumer fails to set the correlation id in the duplicated context
+- `Error retrieving correlation ID from context locals` when the kafka interceptor fails to get the correlation id from the duplicated context
+- `metadata correlationid: ======= MISSING!! =======` when the kafka consumer fails to read the correlation id from the header
 
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
-
-```shell script
-./mvnw quarkus:dev
-```
-
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
-
-## Packaging and running the application
-
-The application can be packaged using:
-
-```shell script
-./mvnw package
-```
-
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
-
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
-```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/code-with-quarkus-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
-## Related Guides
-
-- Messaging - Kafka Connector ([guide](https://quarkus.io/guides/kafka-getting-started)): Connect to Kafka with Reactive Messaging
-
-## Provided Code
-
-### Messaging codestart
-
-Use Quarkus Messaging
-
-[Related Apache Kafka guide section...](https://quarkus.io/guides/kafka-reactive-getting-started)
-
+expected behavior: we should be able to access the duplicated context from the thread used to consume the jms message, including running the kafka interceptor.
