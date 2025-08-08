@@ -1,0 +1,8 @@
+quarkus:
+  test:
+    integration-test-profile: it
+  native:
+    resources:
+      includes:
+        - application.yaml
+        - application-it.yaml
