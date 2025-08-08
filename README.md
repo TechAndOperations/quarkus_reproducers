@@ -1,29 +1,35 @@
-Unit tests succeed
-```
-$ mvn clean package
-...
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.195 s -- in org.acme.GreetingResourceTest
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
+# xml-component-test
+
+When we try to unmarchall a xml document with a namespace from a file in a QuarkusTest and in a QuarkusComponentTest (same test), we observe a different result between quarkus 3.28.5 (last working) and quarkus 3.29.4+
+
+> Java version: 21
+
+How to run the reproducer :
+
+### build 3.28.5
+
+```bash
+mvn clean install
 ```
 
-IT succeed also in JVM mode
-```
-$ mvn clean verify -DskipITs=false 
-...
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.604 s -- in org.acme.GreetingResourceIT
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
+The tests should pass.
+
+### build 3.29.4
+
+Edit the pom.xml and change the property `quarkus.platform.version` to `3.29.4`, rebuild and run the tests again:
+
+```bash
+mvn clean install
 ```
 
-But this fails in native:
+The quarkus component test should fail proving the regression
+
+### build 3.32.3
+
+Edit the pom.xml and change the property `quarkus.platform.version` to `3.32.3`, rebuild and run the tests again:
+
+```bash
+mvn clean install
 ```
-$ mvn clean verify -Pnative
-...
-[ERROR]   GreetingResourceIT>GreetingResourceTest.testProp:27 1 expectation failed.
-Response body doesn't match expectation.
-Expected: is "bar"
-  Actual: xx 
-```
+
+The quarkus component test should fail again proving the regression is still present in 3.32.3
