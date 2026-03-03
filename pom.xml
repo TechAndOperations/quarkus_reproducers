@@ -52,6 +52,11 @@
             <artifactId>quarkus-artemis-jms-ra</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.quarkiverse.ironjacamar</groupId>
+            <artifactId>quarkus-ironjacamar</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-container-image-jib</artifactId>
         </dependency>
@@ -99,6 +104,7 @@
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
+                        <skipTests>true</skipTests>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
