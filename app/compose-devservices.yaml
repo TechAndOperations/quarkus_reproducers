@@ -1,0 +1,85 @@
+name: acme-quarkus
+services:
+  apicurio:
+    image: docker.io/apicurio/apicurio-registry-mem:2.6.13.Final
+    ports:
+      - "38080:8080"
+  artemis:
+    image: quay.io/arkmq-org/activemq-artemis-broker:artemis.2.40.0
+    ports:
+    - '61616:61616'
+    environment:
+      AMQ_USER: admin
+      AMQ_PASSWORD: admin
+      AMQ_EXTRA_ARGS: --no-autotune --mapped --no-fsync
+  kafka:
+    image: docker.io/apache/kafka-native:3.9.0
+    restart: 'no'
+    ports:
+    - '9092:9092'
+    labels:
+      io.quarkus.devservices.compose.exposed_ports: /etc/kafka/docker/ports
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+    command: /kafka.sh
+    volumes:
+    - ./kafka.sh:/kafka.sh
+  vault:
+    image: hashicorp/vault:1.15.2
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      SKIP_SETCAP: "true"
+      VAULT_ADDR: "http://localhost:8200"
+    cap_add:
+      - IPC_LOCK
+    # command: "server -dev"
+    volumes:
+      - ./vault-entrypoint.sh:/vault-entrypoint.sh
+    entrypoint: ["sh", "/vault-entrypoint.sh"]
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.2
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "28080:8080"
+  lgtm:
+    image: grafana/otel-lgtm:latest
+    container_name: lgtm
+    restart: unless-stopped
+
+    # Map the essential ports:
+    ports:
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+
+    # Optional: persist local data across restarts (handy during dev)
+#    volumes:
+#      - lgtm-data:/data
+
+    # Optional: turn on verbose component logs if you’re troubleshooting
+    # (uncomment any you want; or set ENABLE_LOGS_ALL=true)
+#    environment:
+#       ENABLE_LOGS_GRAFANA: "true"
+#       ENABLE_LOGS_TEMPO: "true"
+#       ENABLE_LOGS_LOKI: "true"
+#       ENABLE_LOGS_PROMETHEUS: "true"
+#       ENABLE_LOGS_OTELCOL: "true"
+#       ENABLE_LOGS_ALL: "true"
+
+#volumes:
+#  lgtm-data:

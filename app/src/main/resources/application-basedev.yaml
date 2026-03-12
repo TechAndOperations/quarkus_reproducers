@@ -1,0 +1,9 @@
+config_ordinal: 255
+
+#quarkus:
+#  otel:
+#    exporter:
+#      otlp:
+#        endpoint: ${ELASTIC_APM_SERVER_URL}
+#    resource:
+#      attributes: deployment.environment=${APM_CONTEXT_ENV:LOCAL},acme/technology=Quarkus,acme/env=ACME
