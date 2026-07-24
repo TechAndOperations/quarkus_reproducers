@@ -1,0 +1,14 @@
+name: reproducer-graphql
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.5
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8543:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    labels:
+      io.quarkus.devservices.compose.wait_for.logs: ".*Installed features.*"
